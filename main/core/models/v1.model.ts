@@ -15,4 +15,19 @@ export class V1Model {
       data: "Hello World",
     };
   }
+  async create(data: any) {
+    return this.dbClient.insertOne(data);
+  }
+  async updateOne(filter: any, update: any) {
+    return this.dbClient.updateOne(filter, update);
+  }
+  async deleteOne(data: any) {
+    return this.dbClient.deleteOne(data);
+  }
+  async findOne(filter: any) {
+    return this.dbClient.findOne(filter);
+  }
+  async find(filter: any) {
+    return this.dbClient.find(filter);
+  }
 }
