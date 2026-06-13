@@ -1,6 +1,10 @@
-# guard-stack
+# @manik3112/guard-stack
 
-`guard-stack` secures internal service-to-service calls by signing and validating JWT request envelopes with strict `HS256`.
+`@manik3112/guard-stack` secures internal service-to-service calls by signing and validating JWT request envelopes with strict `HS256`.
+
+```bash
+npm i @manik3112/guard-stack
+```
 
 This package is for internal microservice trust only:
 - Request signing
@@ -13,32 +17,40 @@ This package is not for user authentication, sessions, OAuth, or RBAC.
 ## Quick Start
 
 ```ts
-import { create, validate } from "guard-stack";
+import { Create, Validate } from "@manik3112/guard-stack";
 
-const token = create({
+const create = new Create("service-a", "service-b");
+const token = create.execute({
   issuer: "service-a",
   audience: "service-b",
   secret: process.env.SERVICE_A_SECRET!,
   request: {
     method: "POST",
     path: "/payments/create",
-    body: { amount: 499 }
+    body: { amount: 499 },
   },
-  expiresIn: 30
+  expiresIn: 30,
 });
 
-const result = await validate({
+const validate = new Validate();
+const result = await validate.execute({
   token,
   currentService: "service-b",
   trustedIssuers: {
-    "service-a": process.env.SERVICE_A_SECRET!
+    "service-a": process.env.SERVICE_A_SECRET!,
   },
   request: {
     method: "POST",
     path: "/payments/create",
-    body: { amount: 499 }
-  }
+    body: { amount: 499 },
+  },
 });
+
+if (result.valid) {
+  console.log("Caller:", result.payload?.iss);
+} else {
+  console.error("Rejected:", result.reason);
+}
 ```
 
 ## Security Model
@@ -78,16 +90,54 @@ type GuardStackPayload = {
 
 ## Public API
 
-- `create(input): string`
-- `validate(input): Promise<ValidationResult>`
+### `Create`
+
+```ts
+const create = new Create(issuer, audience);
+const token = create.execute(input); // returns string
+```
+
+`CreateInput`:
+```ts
+type CreateInput = {
+  issuer: string;
+  audience: string;
+  secret: string;
+  kid?: string;
+  request?: RequestBindingInput;
+  expiresIn?: number;
+  now?: Date;
+};
+```
+
+### `Validate`
+
+```ts
+const validate = new Validate();
+const result = await validate.execute(input); // returns Promise<ValidationResult>
+```
+
+`ValidateInput`:
+```ts
+type ValidateInput = {
+  token: string;
+  currentService: string;
+  trustedIssuers?: Record<string, string>;
+  getSecret?: (issuer: string, kid?: string) => Promise<string | undefined> | string | undefined;
+  request?: RequestBindingInput;
+  allowedAlgorithms?: ReadonlyArray<"HS256">;
+  clockToleranceSeconds?: number;
+  now?: Date;
+};
+```
 
 `ValidationResult`:
 ```ts
 type ValidationResult = {
   valid: boolean;
-  reason?: string;
+  reason?: ValidationReason;
   payload?: GuardStackPayload;
-}
+};
 ```
 
 ## Nonce Stores
@@ -106,10 +156,19 @@ Built-in:
 
 ## Secret Rotation
 
-`create` supports `kid`; `validate` supports async secret resolution via:
+`Create.execute` supports `kid`; `Validate.execute` supports async secret resolution via:
 
 ```ts
-getSecret: async (issuer, kid) => { ... }
+const validate = new Validate();
+
+const result = await validate.execute({
+  token,
+  currentService: "service-b",
+  getSecret: async (issuer, kid) => {
+    // resolve secret by issuer + kid for rotation
+    return secrets[`${issuer}:${kid ?? "default"}`];
+  },
+});
 ```
 
 ## Middleware Adapters

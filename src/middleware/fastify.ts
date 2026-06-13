@@ -33,7 +33,7 @@ export const fastifyPreHandler =
       return;
     }
 
-    const result = await validate.executevalidate({
+    const result = await validate.execute({
       ...options,
       token,
       request: {

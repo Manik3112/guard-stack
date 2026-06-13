@@ -32,7 +32,7 @@ export class GuardStackNestGuard {
       return false;
     }
 
-    const result = await this.validate.executevalidate({
+    const result = await this.validate.execute({
       ...this.options,
       token,
       request: {

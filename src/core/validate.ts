@@ -14,7 +14,7 @@ import {
 import { buildRequestBinding } from "../utils/request";
 
 export class Validate {
-  async executevalidate(input: ValidateInput): Promise<ValidationResult> {
+  async execute(input: ValidateInput): Promise<ValidationResult> {
     const parsed = parseJwt(input.token);
     if (!parsed) {
       return this.fail("MALFORMED_TOKEN");
