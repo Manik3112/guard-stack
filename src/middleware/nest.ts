@@ -1,5 +1,5 @@
 import type { GuardStackMiddlewareOptions } from "../types";
-import { validate } from "../core/validate";
+import { Validate } from "../core/validate";
 
 type ExecutionContextLike = {
   switchToHttp(): {
@@ -8,7 +8,10 @@ type ExecutionContextLike = {
 };
 
 export class GuardStackNestGuard {
-  constructor(private readonly options: GuardStackMiddlewareOptions) {}
+  private validate: Validate;
+  constructor(private readonly options: GuardStackMiddlewareOptions) {
+    this.validate = new Validate();
+  }
 
   async canActivate(context: ExecutionContextLike): Promise<boolean> {
     const request = context.switchToHttp().getRequest<{
@@ -19,7 +22,9 @@ export class GuardStackNestGuard {
       guardStack?: unknown;
     }>();
 
-    const headerName = (this.options.headerName ?? "x-guard-stack-token").toLowerCase();
+    const headerName = (
+      this.options.headerName ?? "x-guard-stack-token"
+    ).toLowerCase();
     const headerValue = request.headers[headerName];
     const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
 
@@ -27,14 +32,14 @@ export class GuardStackNestGuard {
       return false;
     }
 
-    const result = await validate({
+    const result = await this.validate.executevalidate({
       ...this.options,
       token,
       request: {
         method: request.method,
         path: request.url,
-        body: request.body
-      }
+        body: request.body,
+      },
     });
 
     if (!result.valid) {

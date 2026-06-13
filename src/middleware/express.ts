@@ -1,5 +1,5 @@
 import type { GuardStackMiddlewareOptions } from "../types";
-import { validate } from "../core/validate";
+import { Validate } from "../core/validate";
 
 type ExpressLikeRequest = {
   headers: Record<string, string | string[] | undefined>;
@@ -18,10 +18,14 @@ type ExpressLikeResponse = {
 
 type NextFn = () => void;
 
+const validate = new Validate();
+
 export const expressMiddleware =
   (options: GuardStackMiddlewareOptions) =>
   async (req: ExpressLikeRequest, res: ExpressLikeResponse, next: NextFn) => {
-    const headerName = (options.headerName ?? "x-guard-stack-token").toLowerCase();
+    const headerName = (
+      options.headerName ?? "x-guard-stack-token"
+    ).toLowerCase();
     const headerValue = req.headers[headerName];
     const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
 
@@ -30,14 +34,14 @@ export const expressMiddleware =
       return;
     }
 
-    const result = await validate({
+    const result = await validate.executevalidate({
       ...options,
       token,
       request: {
         method: req.method,
         path: req.originalUrl ?? req.path ?? req.url,
-        body: req.body
-      }
+        body: req.body,
+      },
     });
 
     if (!result.valid) {

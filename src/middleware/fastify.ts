@@ -1,5 +1,5 @@
 import type { GuardStackMiddlewareOptions } from "../types";
-import { validate } from "../core/validate";
+import { Validate } from "../core/validate";
 
 type FastifyLikeRequest = {
   headers: Record<string, string | string[] | undefined>;
@@ -14,10 +14,17 @@ type FastifyLikeReply = {
   send(payload: unknown): void;
 };
 
+const validate = new Validate();
+
 export const fastifyPreHandler =
   (options: GuardStackMiddlewareOptions) =>
-  async (request: FastifyLikeRequest, reply: FastifyLikeReply): Promise<void> => {
-    const headerName = (options.headerName ?? "x-guard-stack-token").toLowerCase();
+  async (
+    request: FastifyLikeRequest,
+    reply: FastifyLikeReply,
+  ): Promise<void> => {
+    const headerName = (
+      options.headerName ?? "x-guard-stack-token"
+    ).toLowerCase();
     const headerValue = request.headers[headerName];
     const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
 
@@ -26,14 +33,14 @@ export const fastifyPreHandler =
       return;
     }
 
-    const result = await validate({
+    const result = await validate.executevalidate({
       ...options,
       token,
       request: {
         method: request.method,
         path: request.url,
-        body: request.body
-      }
+        body: request.body,
+      },
     });
 
     if (!result.valid) {
