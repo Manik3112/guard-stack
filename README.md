@@ -1,81 +1,149 @@
-# TypeScript Base Starter
+# guard-stack
 
-This repository serves as a base structure for starting new TypeScript modules. It is designed to promote maintainability, modularity, and ease of upgrades for dependencies.
+`guard-stack` secures internal service-to-service calls by signing and validating JWT request envelopes with strict `HS256`.
 
-## Structure Overview
+This package is for internal microservice trust only:
+- Request signing
+- Service identity verification
+- Replay protection
+- Optional request binding (method + path + body hash)
 
+This package is not for user authentication, sessions, OAuth, or RBAC.
+
+## Quick Start
+
+```ts
+import { create, validate } from "guard-stack";
+
+const token = create({
+  issuer: "service-a",
+  audience: "service-b",
+  secret: process.env.SERVICE_A_SECRET!,
+  request: {
+    method: "POST",
+    path: "/payments/create",
+    body: { amount: 499 }
+  },
+  expiresIn: 30
+});
+
+const result = await validate({
+  token,
+  currentService: "service-b",
+  trustedIssuers: {
+    "service-a": process.env.SERVICE_A_SECRET!
+  },
+  request: {
+    method: "POST",
+    path: "/payments/create",
+    body: { amount: 499 }
+  }
+});
 ```
-main/
-  ├── core/
-  │   ├── services/
-  │   ├── models/
-  │   ├── controllers/
-  │   ├── dto/
-  │   ├── utils/
-  │   └── enum/
-  └── frame/
-      ├── utils/
-      └── modules/
+
+## Security Model
+
+- **Algorithm lock:** only explicit allowed algorithms are accepted (default: `HS256`)
+- **No alg auto-detection:** `alg: none` and unexpected algorithms are rejected
+- **Per-service secrets:** each issuer has its own secret
+- **Audience check:** token must target current service
+- **Expiry check:** short-lived tokens (default 30s)
+- **Replay defense:** optional `NonceStore` blocks duplicate `jti`
+- **Request binding:** can bind token to method/path/body-hash
+
+## Token Format
+
+Header:
+```json
+{
+  "alg": "HS256",
+  "typ": "GST",
+  "kid": "service-a-v1"
+}
 ```
 
-## Approach
+Payload:
+```ts
+type GuardStackPayload = {
+  iss: string;
+  aud: string;
+  iat: number;
+  exp: number;
+  jti: string;
+  mth?: string;
+  pth?: string;
+  bdy?: string;
+}
+```
 
-- **No direct package dependencies in `core/`:**  
-  All third-party packages and external dependencies are added only in the `frame/` folder.
-- **Mapping via `frame/`:**  
-  The `frame/` folder acts as a bridge or mapper. Any package or utility needed by `core/` is first integrated into `frame/`, then exposed to `core/` through well-defined interfaces or wrappers.
-- **Upgrade and Maintenance:**  
-  If a package needs to be upgraded or replaced, changes are made only in the `frame/` folder. The `core/` code remains untouched, as it interacts only with the abstractions provided by `frame/`.
+## Public API
 
-## How to Use This Base Repo
+- `create(input): string`
+- `validate(input): Promise<ValidationResult>`
 
-1. **Clone this repository:**
+`ValidationResult`:
+```ts
+type ValidationResult = {
+  valid: boolean;
+  reason?: string;
+  payload?: GuardStackPayload;
+}
+```
 
-   ```sh
-   git clone <repo-url> your-new-module
-   cd your-new-module
-   ```
+## Nonce Stores
 
-2. **Install dependencies:**
+Interface:
+```ts
+interface NonceStore {
+  has(jti: string): Promise<boolean>;
+  set(jti: string, ttlSeconds: number): Promise<void>;
+}
+```
 
-   ```sh
-   npm install
-   # or
-   pnpm install
-   ```
+Built-in:
+- `MemoryNonceStore`
+- `RedisNonceStore` (`ioredis`-compatible client)
 
-3. **Add new packages:**
+## Secret Rotation
 
-   - Install any new package as usual.
-   - Integrate it in the `frame/` folder (e.g., create a wrapper in `frame/modules/` or `frame/utils/`).
-   - Expose only the required functionality to `core/`.
+`create` supports `kid`; `validate` supports async secret resolution via:
 
-4. **Develop your module:**
+```ts
+getSecret: async (issuer, kid) => { ... }
+```
 
-   - Write your business logic in the `core/` folder.
-   - Use only the interfaces or utilities exposed by `frame/`.
+## Middleware Adapters
 
-5. **Upgrade or swap packages:**
-   - Make changes only in `frame/` to upgrade or replace a package.
-   - No changes required in `core/` as long as the interface remains the same.
+- Express: `expressMiddleware(options)`
+- Fastify: `fastifyPreHandler(options)`
+- NestJS: `GuardStackNestGuard`
 
-## Design Pattern and Rationale
+See `examples/` for working snippets.
 
-This approach is rooted in well-established software design principles:
+## Architecture
 
-- **Dependency Inversion Principle (SOLID):**  
-  High-level modules (`core/`) do not depend directly on low-level modules (external packages); both depend on abstractions. This separation ensures that business logic remains decoupled from specific implementations.
+```txt
+src/
+  core/        # create/validate flows
+  crypto/      # JWT HMAC signing + verification
+  middleware/  # Express/NestJS/Fastify adapters
+  stores/      # Nonce store adapters
+  types/       # Public type contracts
+  utils/       # Hashing/normalization utilities
+tests/
+examples/
+```
 
-- **Adapter Pattern:**  
-  The `frame/` layer acts as an adapter, translating and exposing only the necessary interfaces from third-party packages to the `core` layer. This makes it easy to upgrade or swap out dependencies with minimal impact.
+Flow diagram:
 
-- **Hexagonal Architecture (Ports and Adapters):**  
-  By isolating external dependencies in the `frame/` layer, the codebase achieves a clear separation between the application's core logic and its external interfaces.
+```txt
+Client -> API Gateway --(GST token)--> Service A --(new GST token)--> Service B
+```
 
-**Benefits of this approach:**
+## Development
 
-- Enhances maintainability and scalability.
-- Simplifies dependency upgrades and replacements.
-- Improves testability by allowing easy mocking of external dependencies.
-
-This design pattern is widely adopted in robust, long-lived codebases and is highly recommended for projects that prioritize clean architecture and long-term flexibility.
+```bash
+npm install
+npm test
+npm run build
+```
