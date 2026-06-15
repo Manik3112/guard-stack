@@ -1,82 +1,82 @@
 {
-  "name": "@manik3112/guard-stack",
-  "version": "0.0.1-beta.2",
-  "description": "Production-grade internal microservice authentication using signed JWT request envelopes.",
-  "author": "Manik Rastogi",
-  "license": "ISC",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Manik3112/guard-stack.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Manik3112/guard-stack/issues"
-  },
-  "homepage": "https://github.com/Manik3112/guard-stack#readme",
-  "keywords": [
-    "microservices",
-    "jwt",
-    "service-authentication",
-    "request-signing",
-    "replay-protection",
-    "security"
-  ],
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "require": "./dist/cjs/index.js",
-      "import": "./dist/esm/index.js",
-      "default": "./dist/esm/index.js"
+    "name": "@manik3112/guard-stack",
+    "version": "0.0.1-beta.3",
+    "description": "Production-grade internal microservice authentication using signed JWT request envelopes.",
+    "author": "Manik Rastogi",
+    "license": "ISC",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Manik3112/guard-stack.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Manik3112/guard-stack/issues"
+    },
+    "homepage": "https://github.com/Manik3112/guard-stack#readme",
+    "keywords": [
+        "microservices",
+        "jwt",
+        "service-authentication",
+        "request-signing",
+        "replay-protection",
+        "security"
+    ],
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.js",
+    "types": "./dist/types/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/types/index.d.ts",
+            "require": "./dist/cjs/index.js",
+            "import": "./dist/esm/index.js",
+            "default": "./dist/esm/index.js"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "sideEffects": false,
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "build": "pnpm run clean && pnpm run build:types && pnpm run build:esm && pnpm run build:cjs",
+        "build:types": "tsc -p tsconfig.types.json",
+        "build:esm": "tsc -p tsconfig.esm.json",
+        "build:cjs": "tsc -p tsconfig.cjs.json",
+        "clean": "rm -rf dist",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "prepare": "pnpm run build",
+        "prepublishOnly": "pnpm run build"
+    },
+    "dependencies": {},
+    "peerDependencies": {
+        "@nestjs/common": ">=9",
+        "express": ">=4",
+        "fastify": ">=4",
+        "ioredis": ">=5"
+    },
+    "peerDependenciesMeta": {
+        "@nestjs/common": {
+            "optional": true
+        },
+        "express": {
+            "optional": true
+        },
+        "fastify": {
+            "optional": true
+        },
+        "ioredis": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@types/node": "^20.16.5",
+        "typescript": "^5.6.2",
+        "vitest": "^2.1.1"
+    },
+    "publishConfig": {
+        "access": "public"
     }
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "sideEffects": false,
-  "engines": {
-    "node": ">=18"
-  },
-  "scripts": {
-    "build": "pnpm run clean && pnpm run build:types && pnpm run build:esm && pnpm run build:cjs",
-    "build:types": "tsc -p tsconfig.types.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "clean": "rm -rf dist",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "prepare": "pnpm run build",
-    "prepublishOnly": "pnpm run build"
-  },
-  "dependencies": {},
-  "peerDependencies": {
-    "@nestjs/common": ">=9",
-    "express": ">=4",
-    "fastify": ">=4",
-    "ioredis": ">=5"
-  },
-  "peerDependenciesMeta": {
-    "@nestjs/common": {
-      "optional": true
-    },
-    "express": {
-      "optional": true
-    },
-    "fastify": {
-      "optional": true
-    },
-    "ioredis": {
-      "optional": true
-    }
-  },
-  "devDependencies": {
-    "@types/node": "^20.16.5",
-    "typescript": "^5.6.2",
-    "vitest": "^2.1.1"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
 }
