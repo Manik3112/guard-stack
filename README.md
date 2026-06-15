@@ -1,8 +1,12 @@
-# Guard Stack
+![npm](https://img.shields.io/npm/v/serviceguard-stack)
+![downloads](https://img.shields.io/npm/dm/serviceguard-stack)
+![license](https://img.shields.io/npm/l/serviceguard-stack)
+
+# Service Guard Stack
 
 Production-grade internal microservice authentication using signed JWT request envelopes.
 
-Guard Stack provides a lightweight authentication layer for service-to-service communication by signing requests with HMAC SHA-256, validating trusted issuers, verifying request integrity, and optionally preventing replay attacks.
+Service Guard Stack provides a lightweight authentication layer for service-to-service communication by signing requests with HMAC SHA-256, validating trusted issuers, verifying request integrity, and optionally preventing replay attacks.
 
 ---
 
