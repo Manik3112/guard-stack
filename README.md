@@ -95,9 +95,9 @@ Service A creates a signed request token before calling Service B.
 import { create } from '@manik3112/guard-stack';
 
 const body = {
-        name: 'John Doe',
-        email: 'john@example.com',
-    };
+    name: 'John Doe',
+    email: 'john@example.com',
+};
 
 const token = create.execute({
     issuer: 'service-a',
@@ -106,16 +106,11 @@ const token = create.execute({
     method: 'POST',
     path: '/users',
     body,
-
-    await axios.post(
-    'http://service-b.url/users',
-    body,
-    {
-        headers: {
-            'x-serviceguard-token': token,
-        },
+});
+await axios.post('http://service-b.url/users', body, {
+    headers: {
+        'x-serviceguard-token': token,
     },
-);
 });
 ```
 
