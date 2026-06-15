@@ -45,11 +45,11 @@
         "build:esm": "tsc -p tsconfig.esm.json",
         "build:cjs": "tsc -p tsconfig.cjs.json",
         "clean": "rm -rf dist",
-        "test": "vitest run",
-        "test:watch": "vitest",
+        "test": "jest ",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
         "prepublishOnly": "pnpm run build"
     },
-    "dependencies": {},
     "peerDependencies": {
         "@nestjs/common": ">=9",
         "express": ">=4",
@@ -67,9 +67,11 @@
         }
     },
     "devDependencies": {
+        "@types/jest": "^30.0.0",
         "@types/node": "^20.16.5",
-        "typescript": "^5.6.2",
-        "vitest": "^2.1.1"
+        "jest": "^30.4.2",
+        "ts-jest": "^29.4.11",
+        "typescript": "^5.6.2"
     },
     "publishConfig": {
         "access": "public"

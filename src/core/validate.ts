@@ -34,7 +34,10 @@ export class Validate {
         const { header, payload, signingInput, signature } = parsed;
 
         if (this.nonceStore) {
-            const accepted = await this.nonceStore.add(payload.jti, payload.exp - Date.now());
+            const accepted = await this.nonceStore.add(
+                payload.jti,
+                payload.exp - Math.floor(Date.now() / 1000),
+            );
 
             if (!accepted) {
                 return this.fail('REPLAY_DETECTED');
