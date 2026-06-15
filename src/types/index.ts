@@ -63,7 +63,7 @@ export type CreateInput = {
 export type ValidateInput = {
     token: string;
     request?: RequestBindingInput;
-    allowedAlgorithms?: ReadonlyArray<GuardStackAlgorithm>;
+    // allowedAlgorithms?: ReadonlyArray<GuardStackAlgorithm>;
     clockToleranceSeconds?: number;
     now?: Date;
 };

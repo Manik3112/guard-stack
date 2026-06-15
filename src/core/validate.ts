@@ -34,7 +34,8 @@ export class Validate {
             return this.fail('INVALID_HEADER');
         }
 
-        const allowedAlgorithms = input.allowedAlgorithms ?? DEFAULT_ALLOWED_ALGORITHMS;
+        // const allowedAlgorithms = input.allowedAlgorithms ?? DEFAULT_ALLOWED_ALGORITHMS;
+        const allowedAlgorithms = DEFAULT_ALLOWED_ALGORITHMS;
         if (!allowedAlgorithms.includes(header.alg)) {
             return this.fail('ALGORITHM_NOT_ALLOWED');
         }
