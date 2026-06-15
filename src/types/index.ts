@@ -58,7 +58,6 @@ export type CreateInput = {
     kid?: string;
     request?: RequestBindingInput;
     expiresIn?: number;
-    now?: Date;
 };
 
 export type ValidateInput = {
@@ -66,7 +65,6 @@ export type ValidateInput = {
     request?: RequestBindingInput;
     // allowedAlgorithms?: ReadonlyArray<GuardStackAlgorithm>;
     clockToleranceSeconds?: number;
-    now?: Date;
 };
 
 export type GuardStackMiddlewareOptions = {

@@ -27,7 +27,7 @@ describe('Validate', () => {
     test('rejects tampered signatures', async () => {
         const token = creator.execute({});
 
-        const tampered = token.slice(0, -1) + 'A';
+        const tampered = token.slice(0, -5) + 'A';
 
         const result = await validator.execute({
             token: tampered,
@@ -56,13 +56,12 @@ describe('Validate', () => {
 
     test('rejects expired tokens', async () => {
         const token = creator.execute({
-            expiresIn: 1,
-            now: new Date('2026-01-01T00:00:00Z'),
+            expiresIn: 0,
         });
 
         const result = await validator.execute({
             token,
-            now: new Date('2026-01-01T00:00:30Z'),
+            clockToleranceSeconds: 0,
         });
 
         expect(result.valid).toBe(false);
@@ -203,11 +202,8 @@ describe('Validate', () => {
             add: jest.fn().mockResolvedValue(true),
         };
 
-        const now = new Date();
-
         const token = creator.execute({
             expiresIn: 60,
-            now,
         });
 
         const replayValidator = new Validate({
@@ -220,7 +216,6 @@ describe('Validate', () => {
 
         await replayValidator.execute({
             token,
-            now,
         });
 
         expect(nonceStore.add).toHaveBeenCalledWith(expect.any(String), 60);

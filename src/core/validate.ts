@@ -33,17 +33,6 @@ export class Validate {
 
         const { header, payload, signingInput, signature } = parsed;
 
-        if (this.nonceStore) {
-            const accepted = await this.nonceStore.add(
-                payload.jti,
-                payload.exp - Math.floor(Date.now() / 1000),
-            );
-
-            if (!accepted) {
-                return this.fail('REPLAY_DETECTED');
-            }
-        }
-
         if (header.typ !== GUARD_STACK_TOKEN_TYPE || typeof header.alg !== 'string') {
             return this.fail('INVALID_HEADER');
         }
@@ -72,7 +61,7 @@ export class Validate {
             return this.fail('SIGNATURE_INVALID');
         }
 
-        const nowEpoch = Math.floor((input.now ?? new Date()).getTime() / 1000);
+        const nowEpoch = Math.floor(new Date().getTime() / 1000);
         const clockTolerance = input.clockToleranceSeconds ?? DEFAULT_CLOCK_TOLERANCE_SECONDS;
 
         if (payload.iat > nowEpoch + clockTolerance) {
@@ -98,6 +87,17 @@ export class Validate {
 
         if (payload.bdy && payload.bdy !== expectedRequest.bdy) {
             return this.fail('REQUEST_BODY_HASH_MISMATCH');
+        }
+
+        if (this.nonceStore) {
+            const accepted = await this.nonceStore.add(
+                payload.jti,
+                payload.exp - Math.floor(Date.now() / 1000),
+            );
+
+            if (!accepted) {
+                return this.fail('REPLAY_DETECTED');
+            }
         }
 
         return {
