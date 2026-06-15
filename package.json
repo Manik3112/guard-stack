@@ -47,15 +47,13 @@
         "clean": "rm -rf dist",
         "test": "vitest run",
         "test:watch": "vitest",
-        "prepare": "pnpm run build",
         "prepublishOnly": "pnpm run build"
     },
     "dependencies": {},
     "peerDependencies": {
         "@nestjs/common": ">=9",
         "express": ">=4",
-        "fastify": ">=4",
-        "ioredis": ">=5"
+        "fastify": ">=4"
     },
     "peerDependenciesMeta": {
         "@nestjs/common": {
@@ -65,9 +63,6 @@
             "optional": true
         },
         "fastify": {
-            "optional": true
-        },
-        "ioredis": {
             "optional": true
         }
     },

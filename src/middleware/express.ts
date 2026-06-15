@@ -28,6 +28,7 @@ export const expressMiddleware =
             new Validate({
                 currentService: options.currentService,
                 trustedIssuers: options.trustedIssuers,
+                nonceStore: options.nonceStore,
             });
 
         if (!validate) {

@@ -13,6 +13,7 @@ export class GuardStackNestGuard {
         this.validate = new Validate({
             currentService: options.currentService,
             trustedIssuers: options.trustedIssuers,
+            nonceStore: options.nonceStore,
         });
     }
 

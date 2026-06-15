@@ -1,3 +1,4 @@
+import { NonceStore } from '../adapters/NonceStore';
 import { parseJwt, verifySignature } from '../crypto/jwt';
 import {
     type GuardStackPayload,
@@ -17,10 +18,12 @@ import { buildRequestBinding } from '../utils/request';
 export class Validate {
     private currentService: string;
     private trustedIssuers: Record<string, string>;
+    private nonceStore?: NonceStore;
 
     constructor(private readonly options: GuardStackMiddlewareOptions) {
         this.currentService = options.currentService;
         this.trustedIssuers = options.trustedIssuers;
+        this.nonceStore = options.nonceStore;
     }
     async execute(input: ValidateInput): Promise<ValidationResult> {
         const parsed = parseJwt(input.token);
@@ -29,6 +32,14 @@ export class Validate {
         }
 
         const { header, payload, signingInput, signature } = parsed;
+
+        if (this.nonceStore) {
+            const accepted = await this.nonceStore.add(payload.jti, payload.exp - Date.now());
+
+            if (!accepted) {
+                return this.fail('REPLAY_DETECTED');
+            }
+        }
 
         if (header.typ !== GUARD_STACK_TOKEN_TYPE || typeof header.alg !== 'string') {
             return this.fail('INVALID_HEADER');

@@ -1,3 +1,4 @@
+import { NonceStore } from '../adapters/NonceStore';
 import { GUARD_STACK_ALGORITHM, GUARD_STACK_TOKEN_TYPE } from '../utils/constants';
 
 export type GuardStackAlgorithm = typeof GUARD_STACK_ALGORITHM;
@@ -71,6 +72,7 @@ export type ValidateInput = {
 export type GuardStackMiddlewareOptions = {
     currentService: string;
     trustedIssuers: Record<string, string>;
+    nonceStore?: NonceStore;
     headerName?: string;
     onValidationFailed?: (result: ValidationResult) => void | Promise<void>;
 };
