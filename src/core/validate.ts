@@ -93,7 +93,7 @@ export class Validate {
     isPayloadShapeValid(payload: GuardStackPayload): boolean {
         return (
             typeof payload.iss === 'string' &&
-            typeof payload.aud === 'string' &&
+            typeof payload.aud === 'object' &&
             typeof payload.iat === 'number' &&
             typeof payload.exp === 'number' &&
             typeof payload.jti === 'string'
