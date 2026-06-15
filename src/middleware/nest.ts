@@ -26,7 +26,7 @@ export class GuardStackNestGuard {
             guardStack?: unknown;
         }>();
 
-        const headerName = (this.options.headerName ?? 'x-guard-stack-token').toLowerCase();
+        const headerName = (this.options.headerName ?? 'x-serviceguard-token').toLowerCase();
         const headerValue = request.headers[headerName];
         const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
 

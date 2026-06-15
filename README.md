@@ -94,23 +94,35 @@ Service A creates a signed request token before calling Service B.
 ```ts
 import { create } from '@manik3112/guard-stack';
 
+const body = {
+        name: 'John Doe',
+        email: 'john@example.com',
+    };
+
 const token = create.execute({
     issuer: 'service-a',
     audience: ['service-b'],
     secret: process.env.SERVICE_A_SECRET!,
     method: 'POST',
     path: '/users',
-    body: {
-        name: 'John Doe',
-        email: 'john@example.com',
+    body,
+
+    await axios.post(
+    'http://service-b.url/users',
+    body,
+    {
+        headers: {
+            'x-serviceguard-token': token,
+        },
     },
+);
 });
 ```
 
 The generated token is sent with the request:
 
 ```http
-Authorization: Bearer <guard-stack-token>
+x-serviceguard-token: <guard-stack-token>
 ```
 
 ---
@@ -162,7 +174,7 @@ type GuardStackMiddlewareOptions = {
     /**
      * Header containing the token.
      *
-     * Default: Authorization
+     * Default: x-serviceguard-token
      */
     headerName?: string;
 
@@ -180,7 +192,7 @@ type GuardStackMiddlewareOptions = {
 By default, Guard Stack reads:
 
 ```http
-Authorization: Bearer <token>
+x-serviceguard-token: <token>
 ```
 
 You may use a custom header:

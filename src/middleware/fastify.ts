@@ -30,7 +30,7 @@ export const fastifyPreHandler =
         if (!validate) {
             throw new Error('Validate instance not found');
         }
-        const headerName = (options.headerName ?? 'x-guard-stack-token').toLowerCase();
+        const headerName = (options.headerName ?? 'x-serviceguard-token').toLowerCase();
         const headerValue = request.headers[headerName];
         const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
 

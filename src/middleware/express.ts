@@ -35,7 +35,7 @@ export const expressMiddleware =
             throw new Error('Validate instance not found');
         }
 
-        const headerName = (options.headerName ?? 'x-guard-stack-token').toLowerCase();
+        const headerName = (options.headerName ?? 'x-serviceguard-token').toLowerCase();
         const headerValue = req.headers[headerName];
         const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
 

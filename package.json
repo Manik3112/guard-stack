@@ -1,6 +1,6 @@
 {
-    "name": "@manik3112/guard-stack",
-    "version": "0.0.1-beta.4",
+    "name": "serviceguard-stack",
+    "version": "0.0.1-beta.5",
     "description": "Production-grade internal microservice authentication using signed JWT request envelopes.",
     "author": "Manik Rastogi",
     "license": "ISC",
