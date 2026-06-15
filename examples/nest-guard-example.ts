@@ -1,21 +1,21 @@
-import { CanActivate, Controller, Post, Req, UseGuards } from "@nestjs/common";
-import { GuardStackNestGuard } from "guard-stack";
+import { CanActivate, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { GuardStackNestGuard } from '@manik3112/guard-stack';
 
 const guard = new GuardStackNestGuard({
-  currentService: "service-b",
-  trustedIssuers: {
-    "service-a": process.env.SERVICE_A_SECRET ?? ""
-  }
+    currentService: 'service-b',
+    trustedIssuers: {
+        'service-a': process.env.SERVICE_A_SECRET ?? '',
+    },
 });
 
 @Controller()
 class PaymentsController {
-  @Post("/payments/create")
-  @UseGuards(guard as unknown as CanActivate)
-  create(@Req() request: { guardStack?: unknown }) {
-    return {
-      ok: true,
-      tokenPayload: request.guardStack
-    };
-  }
+    @Post('/payments/create')
+    @UseGuards(guard as unknown as CanActivate)
+    create(@Req() request: { guardStack?: unknown }) {
+        return {
+            ok: true,
+            tokenPayload: request.guardStack,
+        };
+    }
 }

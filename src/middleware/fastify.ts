@@ -1,53 +1,58 @@
-import type { GuardStackMiddlewareOptions } from "../types";
-import { Validate } from "../core/validate";
+import type { GuardStackMiddlewareOptions } from '../types';
+import { Validate } from '../core/validate';
 
 type FastifyLikeRequest = {
-  headers: Record<string, string | string[] | undefined>;
-  method: string;
-  url: string;
-  body?: unknown;
-  guardStack?: unknown;
+    headers: Record<string, string | string[] | undefined>;
+    method: string;
+    url: string;
+    body?: unknown;
+    guardStack?: unknown;
 };
 
 type FastifyLikeReply = {
-  code(statusCode: number): FastifyLikeReply;
-  send(payload: unknown): void;
+    code(statusCode: number): FastifyLikeReply;
+    send(payload: unknown): void;
 };
 
-const validate = new Validate();
+let validate: Validate;
 
 export const fastifyPreHandler =
-  (options: GuardStackMiddlewareOptions) =>
-  async (
-    request: FastifyLikeRequest,
-    reply: FastifyLikeReply,
-  ): Promise<void> => {
-    const headerName = (
-      options.headerName ?? "x-guard-stack-token"
-    ).toLowerCase();
-    const headerValue = request.headers[headerName];
-    const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
+    (options: GuardStackMiddlewareOptions) =>
+    async (request: FastifyLikeRequest, reply: FastifyLikeReply): Promise<void> => {
+        validate =
+            validate ??
+            new Validate({
+                currentService: options.currentService,
+                trustedIssuers: options.trustedIssuers,
+            });
 
-    if (!token) {
-      reply.code(401).send({ valid: false, reason: "MALFORMED_TOKEN" });
-      return;
-    }
+        if (!validate) {
+            throw new Error('Validate instance not found');
+        }
+        const headerName = (options.headerName ?? 'x-guard-stack-token').toLowerCase();
+        const headerValue = request.headers[headerName];
+        const token = Array.isArray(headerValue) ? headerValue[0] : headerValue;
 
-    const result = await validate.execute({
-      ...options,
-      token,
-      request: {
-        method: request.method,
-        path: request.url,
-        body: request.body,
-      },
-    });
+        if (!token) {
+            reply.code(401).send({ valid: false, reason: 'MALFORMED_TOKEN' });
+            return;
+        }
 
-    if (!result.valid) {
-      await options.onValidationFailed?.(result);
-      reply.code(401).send(result);
-      return;
-    }
+        const result = await validate.execute({
+            ...options,
+            token,
+            request: {
+                method: request.method,
+                path: request.url,
+                body: request.body,
+            },
+        });
 
-    request.guardStack = result.payload;
-  };
+        if (!result.valid) {
+            await options.onValidationFailed?.(result);
+            reply.code(401).send(result);
+            return;
+        }
+
+        request.guardStack = result.payload;
+    };

@@ -6,10 +6,12 @@ import { buildRequestBinding } from "../utils/request";
 
 export class Create {
   private issuer: string;
-  private audience: string;
-  constructor(issuer: string, audience: string) {
+  private audiences: string[];
+  private secret: string;
+  constructor({issuer, audiences, secret}: {issuer: string, audiences: string[], secret: string}) {
     this.issuer = issuer;
-    this.audience = audience;
+    this.audiences = audiences;
+    this.secret = secret;
   }
   execute(input: CreateInput): string {
     const nowEpoch = Math.floor((input.now ?? new Date()).getTime() / 1000);
@@ -17,14 +19,14 @@ export class Create {
     const requestBinding = buildRequestBinding(input.request);
 
     const payload: GuardStackPayload = {
-      iss: input.issuer,
-      aud: input.audience,
+      iss: this.issuer,
+      aud: this.audiences,
       iat: nowEpoch,
       exp: nowEpoch + expiresIn,
       jti: randomUUID(),
-      ...requestBinding,
+      ...(input.request ? requestBinding : {}),
     };
 
-    return signJwt(payload, input.secret, input.kid);
+    return signJwt(payload, this.secret, input.kid);
   }
 }

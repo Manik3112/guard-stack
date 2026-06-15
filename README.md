@@ -19,11 +19,13 @@ This package is not for user authentication, sessions, OAuth, or RBAC.
 ```ts
 import { Create, Validate } from "@manik3112/guard-stack";
 
-const create = new Create("service-a", "service-b");
-const token = create.execute({
+const create = new Create({
   issuer: "service-a",
-  audience: "service-b",
+  audiences: ["service-b"],
   secret: process.env.SERVICE_A_SECRET!,
+});
+
+const token = create.execute({
   request: {
     method: "POST",
     path: "/payments/create",
@@ -32,13 +34,15 @@ const token = create.execute({
   expiresIn: 30,
 });
 
-const validate = new Validate();
-const result = await validate.execute({
-  token,
+const validate = new Validate({
   currentService: "service-b",
   trustedIssuers: {
     "service-a": process.env.SERVICE_A_SECRET!,
   },
+});
+
+const result = await validate.execute({
+  token,
   request: {
     method: "POST",
     path: "/payments/create",
@@ -58,7 +62,7 @@ if (result.valid) {
 - **Algorithm lock:** only explicit allowed algorithms are accepted (default: `HS256`)
 - **No alg auto-detection:** `alg: none` and unexpected algorithms are rejected
 - **Per-service secrets:** each issuer has its own secret
-- **Audience check:** token must target current service
+- **Audience check:** token `aud` must include the current service
 - **Expiry check:** short-lived tokens (default 30s)
 - **Replay defense:** optional `NonceStore` blocks duplicate `jti`
 - **Request binding:** can bind token to method/path/body-hash
@@ -78,7 +82,7 @@ Payload:
 ```ts
 type GuardStackPayload = {
   iss: string;
-  aud: string;
+  aud: string[];
   iat: number;
   exp: number;
   jti: string;
@@ -92,17 +96,25 @@ type GuardStackPayload = {
 
 ### `Create`
 
+Configure the issuing service once, then call `execute` per token:
+
 ```ts
-const create = new Create(issuer, audience);
+const create = new Create({ issuer, audiences, secret });
 const token = create.execute(input); // returns string
+```
+
+Constructor options:
+```ts
+{
+  issuer: string;
+  audiences: string[];
+  secret: string;
+}
 ```
 
 `CreateInput`:
 ```ts
 type CreateInput = {
-  issuer: string;
-  audience: string;
-  secret: string;
   kid?: string;
   request?: RequestBindingInput;
   expiresIn?: number;
@@ -112,18 +124,27 @@ type CreateInput = {
 
 ### `Validate`
 
+Configure the receiving service once, then call `execute` per request:
+
 ```ts
-const validate = new Validate();
+const validate = new Validate(options);
 const result = await validate.execute(input); // returns Promise<ValidationResult>
+```
+
+Constructor options (`GuardStackMiddlewareOptions`):
+```ts
+type GuardStackMiddlewareOptions = {
+  currentService: string;
+  trustedIssuers: Record<string, string>;
+  headerName?: string;
+  onValidationFailed?: (result: ValidationResult) => void | Promise<void>;
+};
 ```
 
 `ValidateInput`:
 ```ts
 type ValidateInput = {
   token: string;
-  currentService: string;
-  trustedIssuers?: Record<string, string>;
-  getSecret?: (issuer: string, kid?: string) => Promise<string | undefined> | string | undefined;
   request?: RequestBindingInput;
   allowedAlgorithms?: ReadonlyArray<"HS256">;
   clockToleranceSeconds?: number;
@@ -156,26 +177,50 @@ Built-in:
 
 ## Secret Rotation
 
-`Create.execute` supports `kid`; `Validate.execute` supports async secret resolution via:
+`Create.execute` accepts an optional `kid` that is written into the JWT header. Validation resolves secrets from `trustedIssuers`, keyed by issuer:
 
 ```ts
-const validate = new Validate();
+const create = new Create({
+  issuer: "service-a",
+  audiences: ["service-b"],
+  secret: process.env.SERVICE_A_SECRET_V2!,
+});
 
-const result = await validate.execute({
-  token,
+const token = create.execute({ kid: "service-a-v2" });
+
+const validate = new Validate({
   currentService: "service-b",
-  getSecret: async (issuer, kid) => {
-    // resolve secret by issuer + kid for rotation
-    return secrets[`${issuer}:${kid ?? "default"}`];
+  trustedIssuers: {
+    "service-a": process.env.SERVICE_A_SECRET_V2!,
   },
 });
+
+const result = await validate.execute({ token });
 ```
 
 ## Middleware Adapters
 
+Express, Fastify, and NestJS adapters accept the same `GuardStackMiddlewareOptions` used by the `Validate` constructor:
+
 - Express: `expressMiddleware(options)`
 - Fastify: `fastifyPreHandler(options)`
-- NestJS: `GuardStackNestGuard`
+- NestJS: `new GuardStackNestGuard(options)`
+
+```ts
+import express from "express";
+import { expressMiddleware } from "@manik3112/guard-stack";
+
+const app = express();
+
+app.use(
+  expressMiddleware({
+    currentService: "service-b",
+    trustedIssuers: {
+      "service-a": process.env.SERVICE_A_SECRET!,
+    },
+  }),
+);
+```
 
 See `examples/` for working snippets.
 
